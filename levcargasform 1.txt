@@ -1,0 +1,104 @@
+Private Sub cmdContinua_Click()
+   
+     'Dados padrão
+     If txtObra.Text = "" Then
+        txtObra.Text = "Rua Desembargador do Vale, 258"
+     End If
+     If txtCliente.Text = "" Then
+        txtCliente.Text = "Solo.Net"
+     End If
+     If txtProj.Text = "" Then
+        txtProj.Text = "Engenharia"
+     End If
+     If txtObs.Text = "" Then
+        txtObs.Text = "Estudo"
+     End If
+     
+     Dim MmDB As Database, Dado As Recordset
+
+     'Seleciona e abre o arquivo
+     Set MmDB = OpenDatabase("C:\Solonet VBF\Dados\" & Arquivo)
+     Set Dado = MmDB.OpenRecordset("Dados")
+
+     'Apaga todos os dados existentes
+     
+     H = MmDB.TableDefs("Dados").RecordCount 'Conta quantos records tem
+     For j = 1 To H
+         MmDB.TableDefs("Dados").OpenRecordset.Delete 'apaga o record
+     Next j
+     
+     Dado.AddNew
+     Dado!Obra = txtObra.Text
+     Dado!Cliente = txtCliente.Text
+     Dado!Projeto = txtProj.Text
+     If txtObs.Text <> "" Then
+         Dado!Obs = txtObs.Text
+     End If
+     Dado!Data = txtData.Text
+     Dado!Arquivo = Arquivo
+
+     Dado.Update
+     Dado.Close
+     MmDB.Close
+   
+   txtObra.Text = ""
+   txtCliente.Text = ""
+   txtData.Text = ""
+   txtProj.Text = ""
+   txtObs.Text = ""
+   txtData.SetFocus
+   
+   
+   
+   Unload Me
+   Load Form2
+   Form2.Show
+End Sub
+
+Private Sub cmdMostra_Click()
+'Mostra dados existentes, no arquivo
+   Dim MmDB As Database, Dado As Recordset
+
+On Error GoTo Dado:
+
+   'Seleciona e abre o arquivo
+   Set MmDB = OpenDatabase("C:\Solonet VBF\Dados\" & Arquivo)
+   Set Dado = MmDB.OpenRecordset("Dados")
+   
+   txtData.Text = Dado!Data
+   txtObra.Text = Dado!Obra
+   txtCliente.Text = Dado!Cliente
+   txtProj.Text = Dado!Projeto
+   txtObs.Text = Dado!Obs
+   FlagDados = 0
+   
+   MmDB.Close
+   
+Dado:
+    If Err.Number = 3021 Then   'Tabela Dados vazia
+       txtData.Text = Date
+       FlagDados = 1
+    End If
+End Sub
+
+Private Sub cmdVolta_Click()
+   Form1.Hide
+   Form2.Show
+End Sub
+
+Private Sub Command1_Click()
+   txtObra.Text = ""
+   txtCliente.Text = ""
+   txtData.Text = ""
+   txtProj.Text = ""
+   txtObs.Text = ""
+   txtData.SetFocus
+End Sub
+
+
+
+Private Sub Form_Load()
+    txtData.Text = Date
+    If FlagNovo = 1 Then cmdMostra.Visible = False
+    FlagNovo = 0
+End Sub

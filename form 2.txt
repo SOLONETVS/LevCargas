@@ -1,0 +1,419 @@
+Private Sub cmdContinua_Click()
+   If FlagAbre = 1 Then
+     If FlagDesv = 0 Then
+        Data1.Database.Close
+        FlagDesv = 1
+     End If
+     'Dados do Empreendimento
+     ATC = Val(Str(txtATC))
+     If ATC = 0 Then ATC = 1000
+     ATerreo = Val(Str(txtATerreo))
+     If ATerreo = 0 Then ATerreo = 400
+     ASSolo = Val(Str(txtASSolo))
+     If ASSolo = 0 Then ATerreo = 1000
+     ATipo = Val(Str(txtATipo))
+     If ATipo = 0 Then ATipo = 300
+     NSub = Val(Str(txtNSub))
+     NElev = Val(Str(txtNElev))
+     NEsca = Val(Str(txtNEsca))
+     Taxa = Val(Str(txtTaxa))
+     Vento = Val(Str(txtVento))
+     Rep(1) = Val(txtNPCP)
+     Rep(4) = Val(txtNPer)
+   Else
+   'Dados do Empreendimento
+     ATC = Val(txtATC)
+     If ATC = 0 Then ATC = 1000
+     ATerreo = Val(txtATerreo)
+     If ATerreo = 0 Then ATerreo = 400
+     ASSolo = Val(txtASSolo)
+     If ASSolo = 0 Then ASSolo = 1000
+     ATipo = Val(txtATipo)
+     If ATipo = 0 Then ATipo = 300
+     NSub = Val(txtNSub)
+     NElev = Val(txtNElev)
+     NEsca = Val(txtNEsca)
+     Taxa = Val(txtTaxa)
+     Vento = Val(txtVento)
+     Rep(1) = Val(txtNPCP)
+     Rep(4) = Val(txtNPer)
+   End If
+   
+   Load Form3
+   Form3.Show
+End Sub
+
+
+
+Private Sub cmdMenu_Click()
+Dim RetVal
+RetVal = Shell("C:\Solonet VBF\ExeFiles\Menu1.exe", 1)
+End
+End Sub
+
+Private Sub Form_Load()
+   cmdContinua.Enabled = False
+   mnuDados.Enabled = False
+   mnuItemFechar.Enabled = False
+End Sub
+
+Private Sub mnuDados_Click()
+   Load Form1
+   Form1.Show
+End Sub
+
+Private Sub mnuItemAbrir_Click()
+    mnuItemNovo.Enabled = False
+    mnuItemAbrir.Enabled = False
+    mnuItemFechar.Enabled = True
+    
+    mnuDados.Enabled = True
+    cmdContinua.Enabled = True
+    
+On Error GoTo Repetido
+  
+  CommonDialog1.filename = "C:\Solonet VBF\Dados\*.* "
+  CommonDialog1.Filter = "Text Files (*.mdb)| *.mdb"
+  CommonDialog1.ShowOpen
+      If CommonDialog1.filename = "C:\Solonet VBF\Dados\*.* " Then
+         CommonDialog1.filename = ""
+      End If
+  
+   If CommonDialog1.filename <> "" Then
+      
+      Form2.MousePointer = 11     'forma de relogio
+      Form2.MousePointer = 0     'forma original
+      
+      Arquivo = CommonDialog1.FileTitle
+      Data1.Caption = Arquivo
+      Data1.DatabaseName = CommonDialog1.filename
+      
+      
+      Dim MmDB As Database
+      Set MmDB = OpenDatabase("C:\Solonet VBF\Dados\" & Arquivo)
+      'Verifica se já existe arquivo Pilares
+         FlagPil = MmDB.TableDefs("Pilares").RecordCount 'Conta quantos records tem
+      'Verifica se já existe arquivo ResumoCP
+         FlagRes = MmDB.TableDefs("ResumoCP").RecordCount 'Conta quantos records tem
+      'Verifica se já existe arquivo "LevCarga"
+         FlagReb = MmDB.TableDefs("LevCarga").RecordCount 'Conta quantos records tem
+      MmDB.Close
+      
+      If Data1.Caption <> "" Then
+         Data1.Refresh  '"LevCarga"
+         FlagAbre = 1
+         cmdContinua.SetFocus
+         
+       Else
+        mnuItemNovo.Enabled = True
+        mnuItemAbrir.Enabled = True
+        mnuItemFechar.Enabled = False
+        mnuItemMenu.Enabled = True
+       End If
+      
+
+  Else
+       
+       Arquivo = ""
+       Data1.Caption = ""
+       
+        mnuItemNovo.Enabled = True
+        mnuItemAbrir.Enabled = True
+        mnuItemFechar.Enabled = False
+        mnuItemMenu.Enabled = True
+        mnuDados.Enabled = False
+        cmdContinua.Enabled = False
+       
+       
+  End If
+  
+
+        
+Repetido:
+        
+If Err.Number = 3265 Then 'Não acha tabela '"LevCarga"
+     
+   Dim MyDB As Database, MyWs As Workspace, IxFlds(2) As Field
+   Dim i As Integer
+   Set MyDB = DBEngine.Workspaces(0).OpenDatabase(Arquivo)
+
+  If FlagPil = "" Then
+   'TABELA PILARES
+  'Cria nova TableDef para a tabela Pilares
+      Dim PilTd As TableDef     'Tabela para Pilares
+      Dim PilFlds(15) As Field  'Campos da tabela Pilares
+      Dim PilIdx As Index       'Indice da table Pilares
+      Set PilTd = MyDB.CreateTableDef("Pilares")
+  'Adiciona campos para MyTableDef Pilares
+      Set PilFlds(0) = PilTd.CreateField("Carg_ID", dbLong)
+      Set PilFlds(1) = PilTd.CreateField("Entrada", dbLong)
+      Set PilFlds(2) = PilTd.CreateField("Pilar", dbText)
+      Set PilFlds(3) = PilTd.CreateField("Repetições", dbLong)
+      Set PilFlds(4) = PilTd.CreateField("LadoX", dbSingle)
+      Set PilFlds(5) = PilTd.CreateField("LadoY", dbSingle)
+      Set PilFlds(6) = PilTd.CreateField("CargaMax", dbSingle)
+      Set PilFlds(7) = PilTd.CreateField("CargaMin", dbSingle)
+      Set PilFlds(8) = PilTd.CreateField("MEx", dbSingle)
+      Set PilFlds(9) = PilTd.CreateField("MEy", dbSingle)
+      Set PilFlds(10) = PilTd.CreateField("HxE", dbSingle)
+      Set PilFlds(11) = PilTd.CreateField("HEy", dbSingle)
+      Set PilFlds(12) = PilTd.CreateField("Mx", dbSingle)
+      Set PilFlds(13) = PilTd.CreateField("My", dbSingle)
+      Set PilFlds(14) = PilTd.CreateField("Hx", dbSingle)
+      Set PilFlds(15) = PilTd.CreateField("Hy", dbSingle)
+   'Adiciona os Campos à Tabela
+      For i = 0 To 15
+          PilTd.Fields.Append PilFlds(i)
+      Next i
+   'Now add an Index
+      Set PilIdx = PilTd.CreateIndex("Carg_ID")
+      PilIdx.Primary = True
+      PilIdx.Unique = True
+      Set IxFlds(0) = PilIdx.CreateField("Carg_ID")
+   'Append Field to Fields collection of Index object.
+      PilIdx.Fields.Append IxFlds(0)
+   'Append Index to Indexes collection.
+      PilTd.Indexes.Append PilIdx
+   'Append TableDef to TableDefs collection.
+      MyDB.TableDefs.Append PilTd
+    FlagPil = 1
+    Resume Next
+
+   End If
+   
+   If FlagRes = "" Then
+      'TABELA RESUMOCP
+      'Cria nova TableDef para a tabela ResumoCP
+      Dim ResTd As TableDef     'Tabela para Resumo
+      Dim ResFlds(3) As Field   'Campo da tabela Resumo
+      Set ResTd = MyDB.CreateTableDef("ResumoCP")
+      'Adiciona campos para MyTableDef Pilares
+      Set ResFlds(0) = ResTd.CreateField("Alternativa", dbLong)
+      Set ResFlds(1) = ResTd.CreateField("Solução", dbText)
+      Set ResFlds(2) = ResTd.CreateField("CustoR", dbSingle)
+      Set ResFlds(3) = ResTd.CreateField("CustoU", dbSingle)
+      'Adiciona os Campos à Tabela
+      For i = 0 To 3
+          ResTd.Fields.Append ResFlds(i)
+      Next i
+      MyDB.TableDefs.Append ResTd
+      FlagRes = 1
+      Resume Next
+
+   End If
+   
+   'TABELA DE LEVCARGA
+   'Cria nova TableDef para a tabela LEVCARGA
+      Dim LevTd As TableDef     'Tabela para LEVCARGA
+      Dim LevFlds(10) As Field   'Campo da tabela LEVCARGA
+      Set LevTd = MyDB.CreateTableDef("LevCarga")
+   'Adiciona campos para MyTableDef LEVCARGA
+      Set LevFlds(0) = LevTd.CreateField("ATC", dbSingle)
+      Set LevFlds(1) = LevTd.CreateField("ATerreo", dbSingle)
+      Set LevFlds(2) = LevTd.CreateField("ASSolo", dbSingle)
+      Set LevFlds(3) = LevTd.CreateField("ATipo", dbSingle)
+      Set LevFlds(4) = LevTd.CreateField("NSub", dbSingle)
+      Set LevFlds(5) = LevTd.CreateField("NElev", dbSingle)
+      Set LevFlds(6) = LevTd.CreateField("NEsca", dbSingle)
+      Set LevFlds(7) = LevTd.CreateField("Taxa", dbSingle)
+      Set LevFlds(8) = LevTd.CreateField("Vento", dbSingle)
+      Set LevFlds(9) = LevTd.CreateField("Cortina", dbSingle)
+      Set LevFlds(10) = LevTd.CreateField("SCarg", dbSingle)
+    'Adiciona os Campos à Tabela
+      For i = 0 To 10
+          LevTd.Fields.Append LevFlds(i)
+      Next i
+      MyDB.TableDefs.Append LevTd
+      
+      'cmdCalcula.Enabled = True
+      txtATC.SetFocus
+      
+      
+      MyDB.Close
+      Resume Next
+      
+      
+       
+End If
+
+   
+
+   If Err.Number = 3024 Then 'Não acha o arquivo
+        Arquivo = ""
+        Data1.Caption = ""
+        mnuAbrirItem.Enabled = True
+   End If
+
+   
+End Sub
+
+Private Sub mnuItemFechar_Click()
+    Unload Me
+    Form2.Show
+End Sub
+
+
+
+Private Sub mnuItemNovo_Click()
+mnuItemNovo.Enabled = False
+mnuItemAbrir.Enabled = False
+
+mnuDados.Enabled = True
+cmdContinua.Enabled = True
+FlagNovo = 1
+
+
+Arquivo = InputBox("Nome do Arquivo ?", "Arquivo")
+
+If Arquivo <> "" Then
+
+   Data1.Caption = Arquivo & ".mdb"
+   Arquivo = Data1.Caption
+   
+   'CRIANDO DATABASE ESFORÇOS
+     
+   Dim MyDB As Database, MyWs As Workspace, IxFlds(2) As Field
+   Dim i As Integer
+
+   On Error GoTo DataBaseError
+
+   'Cria o Arquivo Database
+      Set MyWs = DBEngine.Workspaces(0)
+      Set MyDB = MyWs.CreateDatabase("C:\Solonet VBF\Dados\" & Arquivo, dbLangGeneral, dbVersion25)
+   
+   'TABELA DADOS
+   'Cria nova TableDef para a tabela Dados
+      Dim DadTd As TableDef     'Tabela para Dados da Obra
+      Dim DadFlds(5) As Field   'Campo da tabela Dados
+      Set DadTd = MyDB.CreateTableDef("Dados")
+   'Adiciona os campos para MyTableDef Dados
+      Set DadFlds(0) = DadTd.CreateField("Obra", dbText)
+          DadFlds(0).Size = 60
+      Set DadFlds(1) = DadTd.CreateField("Cliente", dbText)
+          DadFlds(1).Size = 60
+      Set DadFlds(2) = DadTd.CreateField("Data", dbText)
+          DadFlds(2).Size = 10
+      Set DadFlds(3) = DadTd.CreateField("Projeto", dbText)
+          DadFlds(3).Size = 30
+      Set DadFlds(4) = DadTd.CreateField("Obs", dbText)
+          DadFlds(4).Size = 60
+      Set DadFlds(5) = DadTd.CreateField("Arquivo", dbText)
+          DadFlds(5).Size = 30
+
+  'Adiciona os Campos à Tabela
+      For i = 0 To 5
+          DadTd.Fields.Append DadFlds(i)
+      Next i
+  'Adiciona TableDef to TableDefs collection.
+      MyDB.TableDefs.Append DadTd
+  
+  'TABELA PILARES
+  'Cria nova TableDef para a tabela Pilares
+      Dim PilTd As TableDef     'Tabela para Pilares
+      Dim PilFlds(15) As Field  'Campos da tabela Pilares
+      Dim PilIdx As Index       'Indice da table Pilares
+      Set PilTd = MyDB.CreateTableDef("Pilares")
+  'Adiciona campos para MyTableDef Pilares
+      Set PilFlds(0) = PilTd.CreateField("Carg_ID", dbLong)
+      Set PilFlds(1) = PilTd.CreateField("Entrada", dbLong)
+      Set PilFlds(2) = PilTd.CreateField("Pilar", dbText)
+      Set PilFlds(3) = PilTd.CreateField("Repetições", dbLong)
+      Set PilFlds(4) = PilTd.CreateField("LadoX", dbSingle)
+      Set PilFlds(5) = PilTd.CreateField("LadoY", dbSingle)
+      Set PilFlds(6) = PilTd.CreateField("CargaMax", dbSingle)
+      Set PilFlds(7) = PilTd.CreateField("CargaMin", dbSingle)
+      Set PilFlds(8) = PilTd.CreateField("MEx", dbSingle)
+      Set PilFlds(9) = PilTd.CreateField("MEy", dbSingle)
+      Set PilFlds(10) = PilTd.CreateField("HxE", dbSingle)
+      Set PilFlds(11) = PilTd.CreateField("HEy", dbSingle)
+      Set PilFlds(12) = PilTd.CreateField("Mx", dbSingle)
+      Set PilFlds(13) = PilTd.CreateField("My", dbSingle)
+      Set PilFlds(14) = PilTd.CreateField("Hx", dbSingle)
+      Set PilFlds(15) = PilTd.CreateField("Hy", dbSingle)
+   'Adiciona os Campos à Tabela
+      For i = 0 To 15
+          PilTd.Fields.Append PilFlds(i)
+      Next i
+   'Now add an Index
+      Set PilIdx = PilTd.CreateIndex("Carg_ID")
+      PilIdx.Primary = True
+      PilIdx.Unique = True
+      Set IxFlds(0) = PilIdx.CreateField("Carg_ID")
+   'Append Field to Fields collection of Index object.
+      PilIdx.Fields.Append IxFlds(0)
+   'Append Index to Indexes collection.
+      PilTd.Indexes.Append PilIdx
+   'Append TableDef to TableDefs collection.
+      MyDB.TableDefs.Append PilTd
+
+  'TABELA RESUMOCP
+  'Cria nova TableDef para a tabela ResumoCP
+      Dim ResTd As TableDef     'Tabela para Resumo
+      Dim ResFlds(3) As Field   'Campo da tabela Resumo
+      Set ResTd = MyDB.CreateTableDef("ResumoCP")
+  'Adiciona campos para MyTableDef Pilares
+      Set ResFlds(0) = ResTd.CreateField("Alternativa", dbLong)
+      Set ResFlds(1) = ResTd.CreateField("Solução", dbText)
+      Set ResFlds(2) = ResTd.CreateField("CustoR", dbSingle)
+      Set ResFlds(3) = ResTd.CreateField("CustoU", dbSingle)
+   'Adiciona os Campos à Tabela
+      For i = 0 To 3
+          ResTd.Fields.Append ResFlds(i)
+      Next i
+      MyDB.TableDefs.Append ResTd
+      
+  'TABELA DE LEVCARGA
+  'Cria nova TableDef para a tabela LEVCARGA
+      Dim LevTd As TableDef     'Tabela para LEVCARGA
+      Dim LevFlds(10) As Field   'Campo da tabela LEVCARGA
+      Set LevTd = MyDB.CreateTableDef("LevCarga")
+  'Adiciona campos para MyTableDef LEVCARGA
+      Set LevFlds(0) = LevTd.CreateField("ATC", dbSingle)
+      Set LevFlds(1) = LevTd.CreateField("ATerreo", dbSingle)
+      Set LevFlds(2) = LevTd.CreateField("ASSolo", dbSingle)
+      Set LevFlds(3) = LevTd.CreateField("ATipo", dbSingle)
+      Set LevFlds(4) = LevTd.CreateField("NSub", dbSingle)
+      Set LevFlds(5) = LevTd.CreateField("NElev", dbSingle)
+      Set LevFlds(6) = LevTd.CreateField("NEsca", dbSingle)
+      Set LevFlds(7) = LevTd.CreateField("Taxa", dbSingle)
+      Set LevFlds(8) = LevTd.CreateField("Vento", dbSingle)
+      Set LevFlds(9) = LevTd.CreateField("Cortina", dbSingle)
+      Set LevFlds(10) = LevTd.CreateField("SCarg", dbSingle)
+   'Adiciona os Campos à Tabela
+      For i = 0 To 10
+          LevTd.Fields.Append LevFlds(i)
+      Next i
+      MyDB.TableDefs.Append LevTd
+
+    prompt$ = "Arquivo " & Arquivo & " Criado"
+    MsgBox (prompt$)
+
+    MyDB.Close
+    txtATC.SetFocus
+    
+    Load Form1
+    Form1.Show
+
+  Else
+    mnuItemNovo.Enabled = True
+    mnuItemAbrir.Enabled = True
+    mnuItemMenu.Enabled = True
+    mnuDados.Enabled = False
+    cmdContinua.Enabled = False
+    
+End If
+
+DataBaseError:
+If Err.Number = 3204 Then 'DataBase already exists
+    If MsgBox("Arquivo existente !!!", vbOKOnly, "Arquivo Existente") Then
+      
+      Arquivo = InputBox("Novo nome de Arquivo ?", "Arquivo")
+      Data1.Caption = Arquivo & ".mdb"
+      Resume
+      
+    End If
+End If
+
+
+    
+End Sub

@@ -1,0 +1,60 @@
+'PROGRAMA DESENVOLVIDO POR DANIEL ROZENBAUM
+'JAN 01
+Public Arquivo, FlagNovo
+Public Obra, Cliente, Data, Projeto, Obs
+Public FlagDados, FlagAbre, FlagRes, FlagReb, FlagPil, FlagDesv
+Public ATC, ATerreo, ASSolo, ATipo, NSub, NElev, NEsca, Taxa, Vento, CCort
+Public Pil$(5), C(5), Rep(5), Lx(5), Ly(5)
+
+Public Function Arredon(N)
+'Arredonda variaveis
+     A1 = Fix(N * 10)
+     DA1 = A1 / 10 - Fix(A1 / 10)
+     If DA1 > 0.5 Then
+        N = (Fix(A1 / 10) + 1)
+      ElseIf DA1 = 0 Then
+        N = A1 / 10
+      ElseIf DA1 = 0.5 Then
+        N = (Fix(A1 / 10) + 1)
+      ElseIf DA1 < 0.5 Then
+        N = Fix(A1 / 10)
+     End If
+  
+  Arredon = N
+  
+  
+End Function
+Function Calc$(N)
+a = Format(N, "###,###.00")
+Calc$ = a
+End Function
+'PROGRAMA DESENVOLVIDO POR DANIEL ROZENBAUM
+'JAN 01
+Public Arquivo, FlagNovo
+Public Obra, Cliente, Data, Projeto, Obs
+Public FlagDados, FlagAbre, FlagRes, FlagReb, FlagPil, FlagDesv
+Public ATC, ATerreo, ASSolo, ATipo, NSub, NElev, NEsca, Taxa, Vento, CCort
+Public Pil$(5), C(5), Rep(5), Lx(5), Ly(5)
+
+Public Function Arredon(N)
+'Arredonda variaveis
+     A1 = Fix(N * 10)
+     DA1 = A1 / 10 - Fix(A1 / 10)
+     If DA1 > 0.5 Then
+        N = (Fix(A1 / 10) + 1)
+      ElseIf DA1 = 0 Then
+        N = A1 / 10
+      ElseIf DA1 = 0.5 Then
+        N = (Fix(A1 / 10) + 1)
+      ElseIf DA1 < 0.5 Then
+        N = Fix(A1 / 10)
+     End If
+  
+  Arredon = N
+  
+  
+End Function
+Function Calc$(N)
+a = Format(N, "###,###.00")
+Calc$ = a
+End Function

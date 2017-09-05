@@ -1,0 +1,219 @@
+Private Sub cmdCalcula_Click()
+   mnuImpressão.Enabled = True
+  
+  'Zera Vetores
+   List1.Clear: List2.Clear: List3.Clear
+   List4.Clear: List5.Clear: List6.Clear
+   
+  'Considerações para o dimensionamento:
+  'Periferia = 1 pilar / 30 m2
+  'Torre =     1 pilar / 12 m2
+  'Torre     = 80% da carga total
+  'Periferia = 20% da carga total
+  
+   
+  
+  'Carga total no Edifício (t)
+   CTotal = ATC * Taxa * Vento
+       
+   'CARGAS DA TORRE
+        'Carga na Torre
+         CargTorre = CTotal * 0.8
+         
+        'Calculo do total de pilares
+         NumPil = Arredon(ATipo / 12)
+         
+        'PILARES INTERNOS
+        'Pilares da caixa de escada = 2
+        'Pilares de canto           = 4
+         Pil$(1) = "PInt"
+         Rep(1) = NumPil - NElev - NEsca * 2 - 4
+   
+        'Carga dos Pilares Internos
+         C(1) = Arredon(CargTorre * 0.7 / Rep(1))
+         'Dimensões dos Pilares
+         Lx(1) = 0.3: Ly(1) = 0.5
+         
+        'ELEVADORES
+          Pil$(2) = "PElev"
+          Rep(2) = NElev
+          If Rep(2) <> 0 Then
+             C(2) = Arredon(CargTorre * 0.15 / Rep(2))
+            Else
+             C(2) = 0
+          End If
+        'Dimensões dos Pilares
+         Lx(2) = 2.5: Ly(2) = 2.4
+      
+        'ESCADAS
+          Pil$(3) = "PEsca"
+          Rep(3) = NEsca * 2
+          If Rep(2) <> 0 Then
+             C(3) = Arredon(CargTorre * 0.07 / Rep(3))
+            Else
+             C(3) = 0
+          End If
+         'Dimensões dos Pilares
+          Lx(3) = 0.2: Ly(3) = 2
+      
+         'PILARES DE CANTO
+          Pil$(4) = "PCt"
+          Rep(4) = 4
+          C(4) = Arredon(CargTorre * 0.08 / Rep(4))
+         'Dimensões dos Pilares
+          Lx(4) = 0.3: Ly(4) = 0.5
+      
+   'CARGAS DA PERIFERIA
+        'Carga na Periferia
+         CPer = CTotal * 0.2
+         'Calculo do total de pilares
+         Rep(5) = Arredon((ASSolo - ATerreo) / 30)
+         
+        'Carga nos Pilares
+         Pil$(5) = "PPer"
+         If Rep(5) <= 0 Then
+            C(5) = 0
+           Else
+            C(5) = Arredon(CPer / Rep(5))
+         End If
+         'Dimensões dos Pilares
+         Lx(5) = 0.2: Ly(5) = 0.4
+
+      
+   'Carga distribuida nas CORTINAS
+       CCort = NSub * 4 * Vento
+       
+   'Somatório de Carga Total
+   SCarg = 0
+    For j = 1 To 5
+       SCarg = SCarg + Rep(j) * C(j)
+    Next j
+      
+   'Resultados
+    For i = 1 To 5
+       'Pilares
+       List1.AddItem Pil$(i)
+       'Repetições
+       List2.AddItem Rep(i)
+       'Dimensão X
+       List3.AddItem Lx(i)
+       'Dimensão Y
+       List4.AddItem Ly(i)
+       'Cargas Max
+       List5.AddItem Calc$(C(i))
+       'Cargas Min
+       List6.AddItem Calc$(C(i))
+    Next i
+ 
+ L1 = 300
+ List1.Height = 4 * L1
+ List2.Height = 4 * L1
+ List3.Height = 4 * L1
+ List4.Height = 4 * L1
+ List5.Height = 4 * L1
+ List6.Height = 4 * L1
+
+ lblCTotal = Calc$(SCarg)
+ lblCCort = Calc$(CCort)
+ 
+ 'Salva dados para o arquivo
+       Dim Lev As Recordset, Pila As Recordset
+       'Seleciona e abre o arquivo e tab de LevCarga
+       Set MmDB = OpenDatabase("C:\Solonet VBF\Dados\" & Arquivo)
+       Set Lev = MmDB.OpenRecordset("LevCarga")
+       Set Pila = MmDB.OpenRecordset("Pilares")
+       
+       'Salva record's
+       'Elimina dados de Orça se já existirem
+           L = MmDB.TableDefs("LevCarga").RecordCount 'Conta quantos records tem
+           For j = 1 To L
+              MmDB.TableDefs("LevCarga").OpenRecordset.Delete 'apaga o record
+           Next j
+           L = MmDB.TableDefs("Pilares").RecordCount 'Conta quantos records tem
+           For j = 1 To L
+              MmDB.TableDefs("Pilares").OpenRecordset.Delete 'apaga o record
+           Next j
+            
+           Lev.AddNew
+           Lev!ATC = ATC
+           Lev!ATerreo = ATerreo
+           Lev!ASSolo = ASSolo
+           Lev!ATipo = ATipo
+           Lev!NSub = NSub
+           Lev!NElev = NElev
+           Lev!NEsca = NEsca
+           Lev!Taxa = Taxa
+           Lev!Vento = Vento
+           Lev!Cortina = CCort
+           Lev!SCarg = SCarg
+           
+           Lev.Update
+           Lev.Close
+           
+           
+           For i = 1 To 5
+             Pila.AddNew
+             Pila!Carg_ID = i
+             Pila!Entrada = i
+             Pila!Pilar = Pil$(i)
+             Pila!Repetições = Rep(i)
+             Pila!LadoX = Lx(i)
+             Pila!LadoY = Ly(i)
+             Pila!CargaMax = C(i)
+             Pila!CargaMin = C(i)
+             
+             Pila!MEx = 0
+             Pila!MEy = 0
+             Pila!HxE = 0
+             Pila!HEy = 0
+ 
+             Pila!Mx = 0
+             Pila!Hy = 0
+             Pila!My = 0
+             Pila!Hx = 0
+             
+             Pila.Update
+           Next i
+           
+           Pila.Close
+           MmDB.Close
+    
+   
+End Sub
+
+Private Sub cmdRetorna_Click()
+  Unload Me
+  Load Form2
+End Sub
+
+Private Sub Command1_Click()
+Dim RetVal
+RetVal = Shell("C:\Solonet VBF\ExeFiles\Menu1.exe", 1)
+End
+End Sub
+
+Private Sub Form_Load()
+   mnuImpressão.Enabled = False
+End Sub
+
+Private Sub mnuImpressão_Click()
+      
+      'Cria copia do arquivo para impressão
+       Dim SourceFile, DestinationFile
+       SourceFile = "C:\Solonet VBF\Dados\" & Arquivo
+       'O arquivo Imprime.mdb, é um arquivo criado no CrystalReport
+       'para impressão dos resultados do Sap
+       'e usado pelo arquivo LevCarg.rpt p/impressão
+       DestinationFile = "C:\Solonet VBF\Dados\Imprime.mdb"
+       FileCopy SourceFile, DestinationFile
+       
+       'Quer imprimir Resultados
+       prompt$ = "Quer imprimir Resultados (S/N) ?" & Chr(13) & Chr(10) & "(Letra Maiuscula!!)"
+       Prt$ = InputBox(prompt$, "Impressão dos Resultados", "S")
+       If Prt$ = "S" Then
+          Tax = InputBox("Numero de cópias", "Impressão dos Resultados", 1)
+          CrystalReport1.ReportFileName = "C:\Solonet VBF\Report\levcarg.rpt"
+          CrystalReport1.CopiesToPrinter = Val(Tax)
+          CrystalReport1.Action = 1
+       End If
+End Sub
